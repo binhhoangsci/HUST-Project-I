@@ -205,3 +205,32 @@ Nếu không có liên kết STRING trong file, feature được ghi là `string
 | Exploratory analysis | Phân tích thăm dò để tìm mẫu/giả thuyết; cần kiểm chứng thêm trước khi kết luận. |
 | Reproducibility | Khả năng người khác chạy lại cùng quy trình và tái tạo kết quả nhờ lưu nguồn, phiên bản, tham số và seed. |
 | Source filtering | Lọc mẫu theo nguồn/loại bằng chứng; pipeline hiện tại chưa áp dụng bước này cho nhãn SynLethDB. |
+
+
+Benchmark khác test set thế nào?
+Benchmark là bộ dữ liệu và quy trình đánh giá được xác định rõ để so sánh các mô hình một cách công bằng. Benchmark quy định dữ liệu nào dùng, nhãn được xác nhận ra sao, cách chia tập và chỉ số đánh giá. Một benchmark có thể bao gồm cả train/validation/test, hoặc chỉ là bộ đánh giá độc lập.
+Test set là một phần dữ liệu cụ thể được giữ lại để đánh giá mô hình cuối cùng sau khi đã chọn mô hình và tham số. Không nên dùng test set để lựa chọn mô hình; nếu đã dùng để ra quyết định thì nó không còn là đánh giá cuối hoàn toàn độc lập.
+Trong dự án này, train/validation/test hiện tại là một phép chia ngẫu nhiên theo cặp của bộ nhãn SynLethDB đã xử lý. Nó có thể dùng làm test set cho baseline, nhưng không tự động trở thành benchmark chất lượng cao. Các nhãn còn trộn nhiều loại bằng chứng và cặp NONSL không nhất thiết là âm tính đúng trong mọi bối cảnh.
+
+Một benchmark bằng chứng thực nghiệm sẽ là một bộ dữ liệu riêng được xây dựng theo tiêu chí rõ ràng, chẳng hạn chỉ nhận các cặp có bằng chứng thực nghiệm phù hợp. Tiêu chí cần xác định trước khi đánh giá và cần xem xét chất lượng nhãn của cả lớp SL lẫn NONSL. Benchmark này dùng để kiểm tra mô hình trên dữ liệu đáng tin cậy hơn; nó không thay thế khái niệm test set — benchmark vẫn có thể được chia thành các tập, hoặc được dùng như một bộ đánh giá ngoài.
+
+Tiếp theo nên làm gì?
+Chốt hai mục tiêu đánh giá.
+Dùng bộ hiện tại làm baseline rộng; quyết định có xây thêm benchmark lọc theo bằng chứng thực nghiệm hay không. Ghi rõ tiêu chí và giới hạn của từng bộ.
+
+Huấn luyện các mô hình tham chiếu.
+Bắt đầu với Logistic Regression và một mô hình cây như Random Forest/Extra Trees. Dùng train để fit; nếu cần scaling hoặc xử lý mất cân bằng, chỉ fit/thực hiện trên train.
+
+Chọn mô hình bằng validation.
+Vì lớp SL ít hơn NONSL, không chỉ báo cáo accuracy. Nên có PR-AUC, ROC-AUC, precision, recall, F1 và confusion matrix; chọn ngưỡng dự đoán bằng validation.
+
+Chỉ đánh giá test sau khi đã chốt mô hình.
+Bộ hiện tại chia theo cặp, nên cùng một gene có thể xuất hiện ở cả train và test. Kết quả đánh giá khả năng dự đoán cặp mới giữa các gene đã gặp, không phải khả năng dự đoán gene hoàn toàn mới. Nếu câu hỏi nghiên cứu cần tổng quát hóa cho gene mới, cần thiết kế thêm phép chia cold-start.
+
+Đo đóng góp của từng nguồn feature.
+So sánh mô hình dùng DepMap, STRING và toàn bộ 10 feature. Việc này cho biết STRING hoặc từng nhóm đặc trưng có cải thiện dự đoán thực sự không.
+
+Phân tích lỗi và viết kết luận.
+Xem các cặp dự đoán sai, tác động của mất cân bằng nhãn và giới hạn bằng chứng; sau đó trình bày dữ liệu, cách chia, chỉ số, kết quả và các giới hạn trong báo cáo.
+
+Dữ liệu và các tập chia hiện tại đã được mô tả trong README.md và nằm ở Data/model_dataset_final/. Việc tiếp theo trực tiếp nhất là huấn luyện baseline và đánh giá bằng validation, đồng thời giữ test chưa đụng tới cho đến khi chốt mô hình.
